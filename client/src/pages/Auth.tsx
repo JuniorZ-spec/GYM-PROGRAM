@@ -1,6 +1,17 @@
+import { AuthView } from "@neondatabase/neon-js/auth/react/ui";
+
+import { useParams } from "react-router-dom";
+
 export default function Auth() {
-    return <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Auth</h1>
-        <p>This is the auth page.</p>
-    </div>
+
+    const { pathname } = useParams();
+
+    return (
+        <div className=" min-h-screen pt-24 pb-12 px-6 flex items-center justify-center">
+
+            <div className="max-w-lg w-full">
+                <AuthView pathname={pathname} />
+            </div>
+
+        </div>)
 }

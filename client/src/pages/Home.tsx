@@ -1,6 +1,24 @@
-export default function Account() {
-    return <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Account</h1>
-        <p>This is the account page.</p>
-    </div>
+import { useAuth } from "../context/AuthContext";
+import { Navigate } from "react-router-dom";
+
+
+
+
+
+export default function Home() {
+
+
+    const { user, isLoading } = useAuth();
+
+
+    if (!user && !isLoading) {
+        return <Navigate to="/profile" />
+    }
+
+
+
+
+    return (
+
+        <div className="p-4">    </div>)
 }
