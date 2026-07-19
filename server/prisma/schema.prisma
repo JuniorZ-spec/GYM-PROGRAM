@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model UserProfile {
+  userId        String   @id
+  goal          String   @db.VarChar(50)
+  currentWeight Float
+  targetWeight  Float
+  height        Float
+  age           Int
+  gender        String   @db.VarChar(20)
+  level         String   @db.VarChar(50)
+  daysPerWeek   Int
+  location      String   @db.VarChar(20)
+  equipment     String[]
+  injuries      String?
+  updatedAt     DateTime @updatedAt
+
+  @@map("user_profile")
+}
+
+model TrainingPlan {
+  id        String   @id @default(uuid())
+  userId    String
+  planJson  Json
+  planText  String
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("training_plans")
+}
+
+model WeightLog {
+  id       String   @id @default(uuid())
+  userId   String
+  weight   Float
+  loggedAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("weight_logs")
+}
+
+model SessionLog {
+  id          String   @id @default(uuid())
+  userId      String
+  week        Int
+  day         String   @db.VarChar(50)
+  completedAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("session_logs")
+}

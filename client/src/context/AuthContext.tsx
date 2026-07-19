@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import type { User } from "../types";
+import type { ReactNode } from "react";
+import type { User, UserProfile } from "../types";
 import { authClient } from "../lib/auth";
-
+import { api } from "../lib/api";
 
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
+    saveProfile: (profile: Omit<UserProfile, "userId" | "updatedAt">) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -13,7 +15,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
     const [neonUser, setNeonUser] = useState<User | null>(null);
-    const [isloading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+
 
     useEffect(() => {
         async function loadUser() {
@@ -24,22 +27,36 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
                 } else {
                     setNeonUser(null);
                 }
-
-            } catch (error) {
+            } catch {
                 setNeonUser(null);
-            }
-            finally {
+            } finally {
                 setIsLoading(false);
             }
         }
         loadUser();
     }, []);
 
-    return (<AuthContext.Provider value={{ user: neonUser }}>
-        {children}
-    </AuthContext.Provider>)
-}
 
+
+    async function saveProfile(
+        profileData: Omit<UserProfile, "userId" | "updatedAt">) {
+        if (!neonUser) {
+            throw new Error("No user logged in");
+        }
+
+
+        await api.saveProfile(neonUser.id, profileData);
+
+
+    }
+
+
+    return (
+        <AuthContext.Provider value={{ user: neonUser, isLoading, saveProfile }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
 
 export function useAuth() {
     const context = useContext(AuthContext);
@@ -50,5 +67,3 @@ export function useAuth() {
 
     return context;
 }
-
-

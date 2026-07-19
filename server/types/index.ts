@@ -1,9 +1,3 @@
-export interface User {
-    id: string;
-    email: string;
-    createdAt: string | Date;
-}
-
 export type Goal = 'lose_weight' | 'gain_muscle' | 'endurance' | 'toning' | 'general_fitness';
 export type Level = 'beginner' | 'intermediate' | 'advanced';
 export type Location = 'home' | 'gym';
@@ -22,7 +16,7 @@ export interface UserProfile {
     location: Location | string;
     equipment: string[];
     injuries?: string | null;
-    updatedAt: string;
+    updatedAt: Date;
 }
 
 export interface PlanOverview {
@@ -62,19 +56,19 @@ export interface PlanAdvice {
 export interface TrainingPlan {
     id: string;
     userId: string;
-    version: number;
-    createdAt: string;
     overview: PlanOverview;
     weeklySchedule: DaySchedule[];
     progression: ProgressionWeek[];
     advice: PlanAdvice;
+    version: number;
+    createdAt: Date;
 }
 
 export interface WeightLog {
     id: string;
     userId: string;
     weight: number;
-    loggedAt: string;
+    loggedAt: Date;
 }
 
 export interface SessionLog {
@@ -82,7 +76,5 @@ export interface SessionLog {
     userId: string;
     week: number;
     day: string;
-    completedAt: string;
+    completedAt: Date;
 }
-
-export type Theme = 'dark' | 'light';

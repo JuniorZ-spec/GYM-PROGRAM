@@ -13,6 +13,18 @@
   --color-card: #18181b;
   --color-accent: #a3e635;
   --color-accent-hover: #84cc16;
+  --color-accent-foreground: #052e16;
+}
+
+:root[data-theme="light"] {
+  --color-background: #ffffff;
+  --color-foreground: #0a0a0a;
+  --color-muted: #52525b;
+  --color-border: #e4e4e7;
+  --color-card: #f4f4f5;
+  --color-accent: #16a34a;
+  --color-accent-hover: #15803d;
+  --color-accent-foreground: #ffffff;
 }
 
 @layer base {
@@ -27,6 +39,11 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  * {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   }
 
   /* Override Better Auth skeleton colors */

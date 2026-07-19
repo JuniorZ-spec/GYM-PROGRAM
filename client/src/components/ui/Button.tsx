@@ -15,7 +15,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
         const variants = {
             primary:
-                "bg-[var(--color-accent)] text-black hover:bg-[var(--color-accent-hover)]",
+                "bg-[var(--color-accent)] text-[var(--color-accent-foreground)] hover:bg-[var(--color-accent-hover)]",
             secondary:
                 "bg-[var(--color-card)] text-[var(--color-foreground)] border border-[var(--color-border)] hover:bg-[var(--color-border)]",
             ghost:
