@@ -1,5 +1,5 @@
 import { RedirectToSignIn, SignedIn } from "@neondatabase/neon-js/auth/react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { Card } from "../components/ui/Card"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";

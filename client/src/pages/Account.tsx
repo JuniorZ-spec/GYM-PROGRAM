@@ -1,6 +1,6 @@
 import { AccountView, RedirectToSignIn, SignedIn } from "@neondatabase/neon-js/auth/react/ui";
 import { useParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 export default function Account() {
     const { pathname } = useParams();

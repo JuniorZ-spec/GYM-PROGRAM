@@ -2,7 +2,7 @@ import { Link } from "react-router-dom"
 import { Dumbbell, LayoutDashboard, Settings } from "lucide-react"
 import { Button } from "../ui/Button"
 import { ThemeToggle } from "../ui/ThemeToggle"
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { UserButton } from "@neondatabase/neon-js/auth/react/ui";
 
 

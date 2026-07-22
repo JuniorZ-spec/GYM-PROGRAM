@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useEffect } from "react";
+import { useAuth } from "../context/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/Button";
@@ -47,18 +47,16 @@ const steps = [
 export default function Home() {
     const { user, isLoading } = useAuth();
     const navigate = useNavigate();
-    const [checking, setChecking] = useState(false);
 
     useEffect(() => {
         if (!user) return;
 
-        setChecking(true);
         api.getProfile(user.id)
             .then(() => navigate('/dashboard', { replace: true }))
             .catch(() => navigate('/onboarding', { replace: true }));
     }, [user, navigate]);
 
-    if (isLoading || (user && checking)) {
+    if (isLoading || user) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-[var(--color-accent)] animate-spin" />

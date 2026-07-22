@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: gym-program-api
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm ci && npx prisma migrate deploy && npx prisma generate
+    startCommand: npx tsx index.ts
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        sync: false
+      - key: OPEN_ROUTER_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: BASE_URL
+        sync: false

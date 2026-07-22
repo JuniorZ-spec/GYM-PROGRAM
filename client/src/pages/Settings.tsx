@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { RedirectToSignIn, SignedIn } from "@neondatabase/neon-js/auth/react";
-import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/useAuth";
+import { useTheme } from "../context/useTheme";
 import { api } from "../lib/api";
 import type { UserProfile } from "../types";
 import { Card } from "../components/ui/Card";
