@@ -27,6 +27,33 @@
   --color-accent-foreground: #ffffff;
 }
 
+/*
+ * Les composants @neondatabase/neon-js/ui (AuthView, AccountView, UserButton)
+ * lisent ces variables shadcn (--background, --foreground, ...) et basculent
+ * en sombre via une classe .dark, alors que le thème de l'app pose un attribut
+ * data-theme sur <html>. Sans ce mapping ils restent figés sur leurs couleurs
+ * par défaut, quel que soit le thème choisi.
+ */
+:root {
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --card: var(--color-card);
+  --card-foreground: var(--color-foreground);
+  --popover: var(--color-card);
+  --popover-foreground: var(--color-foreground);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-accent-foreground);
+  --secondary: var(--color-card);
+  --secondary-foreground: var(--color-foreground);
+  --muted: var(--color-card);
+  --muted-foreground: var(--color-muted);
+  --accent: var(--color-card);
+  --accent-foreground: var(--color-foreground);
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-accent);
+}
+
 @layer base {
   html {
     font-family: var(--font-sans);
