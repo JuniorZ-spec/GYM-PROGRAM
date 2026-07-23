@@ -2,6 +2,8 @@
 
 Application web de coaching sportif : l'utilisateur renseigne son profil (objectif, niveau, poids, matériel disponible...), une IA génère un programme d'entraînement personnalisé, et un dashboard permet de suivre sa progression (poids, séances complétées).
 
+**Stack DevOps** : GitHub Actions (CI) · Vercel (déploiement client) · Render (déploiement serveur, Infrastructure as Code) · Neon Postgres. Détails dans la section [DevOps : CI/CD & Déploiement](#devops--cicd--déploiement).
+
 ## Stack technique
 
 **Client** (`/client`)
@@ -112,15 +114,49 @@ cd client
 npm run dev
 ```
 
-## Déploiement & CI/CD
+## DevOps : CI/CD & Déploiement
 
-- **Client** → [Vercel](https://vercel.com) (Root Directory : `client`). Vercel se connecte au repo GitHub et déploie automatiquement : chaque push sur `main` met à jour la prod, chaque pull request génère une preview. `client/vercel.json` gère le rewrite SPA (nécessaire pour que `react-router-dom` fonctionne après un refresh sur une route type `/dashboard`).
-- **Serveur** → [Render](https://render.com), via le Blueprint `server/render.yaml` (Infrastructure as Code : Render lit ce fichier pour créer le service tout seul). Le serveur tourne avec `tsx` directement en prod (pas de `tsc` + `node dist/`, car le `tsconfig.json` en `module: ESNext` sans extensions `.js` casserait la résolution ESM de Node au runtime — `tsx` évite ce problème).
-- **CI** → [`.github/workflows/ci.yml`](.github/workflows/ci.yml) : à chaque push/PR sur `main`, deux jobs tournent en parallèle — `client` (lint + build) et `server` (typecheck via `tsc --noEmit` + `prisma generate`). Il n'y a pas encore de suite de tests automatisés dans ce repo ; c'est une amélioration à ajouter plus tard.
-- **CD** → Vercel déploie via sa propre intégration Git (indépendante de la CI). Le serveur, lui, n'est déployé que si le job `server` de la CI passe : un troisième job (`deploy-server`) appelle ensuite un [Deploy Hook Render](https://render.com/docs/deploy-hooks) via `curl`.
-- **Protection de `main`** (à activer dans GitHub → Settings → Branches) : exiger que les checks `client` et `server` passent avant de merger une PR. C'est ce qui garantit que ni Vercel ni Render ne déploient jamais du code cassé, puisqu'ils ne déploient que ce qui atteint `main`.
+```
+GitHub repo (JuniorZ-spec/GYM-PROGRAM)
+│
+├─ push/PR ──▶ GitHub Actions CI (.github/workflows/ci.yml)
+│               ├─ job "client"  : lint + build
+│               └─ job "server"  : typecheck (tsc --noEmit) + prisma generate
+│
+├─ merge sur main (CI verte, via branch protection)
+│               │
+│               ├─▶ Vercel (intégration Git native) ─▶ déploie client/ en prod
+│               │      + preview automatique sur chaque PR
+│               │
+│               └─▶ job "deploy-server" (needs: server ✅)
+│                      ─▶ POST sur le Render Deploy Hook ─▶ Render build & déploie server/
+│
+Neon Postgres (base de données, gérée séparément)
+```
 
-**Secrets/variables à configurer :**
+Le principe central : **la CI ne bloque pas Vercel directement** (Vercel a son propre pipeline Git indépendant), mais la **branch protection sur `main`** interdit de merger si la CI échoue — donc rien de cassé n'atteint jamais `main`, donc rien de cassé n'est jamais déployé. Pour le serveur, une couche supplémentaire : le déploiement Render est explicitement conditionné (`needs: server`) à la réussite du job de CI serveur.
+
+### CI — Intégration Continue
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) tourne à chaque `push`/`pull_request` sur `main` :
+- job **`client`** : `npm ci` → `npm run lint` → `npm run build`
+- job **`server`** : `npm ci` → `npx prisma generate` → `npx tsc --noEmit`
+
+Pas encore de suite de tests automatisés dans ce repo (aucun test n'existe côté client ni serveur) — c'est la prochaine brique à ajouter pour renforcer la CI.
+
+### CD — Déploiement Continu
+- **Client → [Vercel](https://vercel.com)** (Root Directory : `client`). Intégration Git native : chaque push sur `main` déploie la prod, chaque PR génère une preview isolée. `client/vercel.json` gère le rewrite SPA, indispensable pour que `react-router-dom` ne 404 pas au refresh sur une route type `/dashboard`.
+- **Serveur → [Render](https://render.com)**. Le job `deploy-server` de la CI n'appelle le [Deploy Hook Render](https://render.com/docs/deploy-hooks) (via `curl`) qu'après un job `server` vert — le serveur ne se redéploie jamais sur du code cassé.
+
+### Infrastructure as Code
+[`server/render.yaml`](server/render.yaml) est un *Blueprint* Render : la configuration du service (build command, start command, healthcheck, variables d'env) est écrite et versionnée dans le repo plutôt que cliquée à la main dans un dashboard. Render lit ce fichier pour (re)créer le service à l'identique.
+
+Le serveur tourne avec `tsx` directement en prod (pas de `tsc` + `node dist/`) : le `tsconfig.json` compile en `module: ESNext` sans extensions `.js` sur les imports relatifs, ce qui casserait la résolution ESM de Node au runtime. `tsx` évite ce problème et reste cohérent avec `npm run dev` qui l'utilise déjà.
+
+*Pas de Docker ici* — choix assumé, pas un oubli : le runtime natif de Render (buildpack Node) est plus simple à opérer pour ce projet. Docker apporterait une portabilité totale (même image en local/CI/prod, indépendance vis-à-vis de Render) au prix d'un `Dockerfile` à écrire et maintenir — à envisager si on change d'hébergeur ou si l'environnement doit être strictement reproductible.
+
+### Gestion des secrets
+- `client/.env.example` et `server/.env.example` documentent les variables nécessaires **sans** valeurs réelles.
+- Les vraies valeurs vivent uniquement dans les dashboards Vercel / Render / GitHub Actions Secrets — jamais dans le repo Git.
 
 | Où               | Variable                | Valeur |
 |------------------|--------------------------|--------|
@@ -129,7 +165,17 @@ npm run dev
 | Render (dashboard)| `DATABASE_URL`, `OPEN_ROUTER_API_KEY`, `CORS_ORIGIN`, `BASE_URL` | voir `server/.env.example` |
 | GitHub Actions secrets | `RENDER_DEPLOY_HOOK_URL` | Deploy Hook créé dans Render → Settings |
 
-`CORS_ORIGIN` sur Render doit inclure l'URL de prod Vercel (les previews `*.vercel.app` sont autorisées automatiquement par le serveur).
+### Observabilité
+`GET /health` sur le serveur ([server/index.ts](server/index.ts)) permet à Render de vérifier que le service répond, et de le redémarrer automatiquement sinon.
+
+### Sécurité réseau
+Le CORS est piloté par la variable `CORS_ORIGIN` (liste d'origines autorisées) plutôt que grand ouvert. Elle doit inclure l'URL de prod Vercel ; les previews `*.vercel.app` du projet sont autorisées automatiquement par le serveur.
+
+### À faire manuellement (hors du repo)
+1. **Render** : New → Blueprint → connecter le repo → renseigner les env vars marquées `sync: false` → créer un Deploy Hook.
+2. **GitHub** : Settings → Secrets and variables → Actions → ajouter `RENDER_DEPLOY_HOOK_URL`.
+3. **Vercel** : Add New Project → Root Directory `client` → renseigner `VITE_API_URL` et `VITE_NEON_AUTH_URL`.
+4. **GitHub branch protection** sur `main` : Settings → Branches → exiger que les checks `client`/`server` passent avant de merger (une fois que la CI a tourné au moins une fois).
 
 ## Scripts disponibles
 
