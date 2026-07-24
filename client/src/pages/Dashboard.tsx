@@ -8,7 +8,9 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { StatTile } from "../components/ui/StatTile";
 import { WeightChart } from "../components/dashboard/WeightChart";
+import { Achievements } from "../components/dashboard/Achievements";
 import { goalLabels } from "../lib/profileOptions";
+import { computeBadges, computeStreak } from "../lib/achievements";
 import {
     Apple,
     CheckCircle2,
@@ -22,6 +24,7 @@ import {
     Scale,
     Sparkles,
     Target,
+    Trophy,
     TrendingUp,
 } from "lucide-react";
 
@@ -41,11 +44,35 @@ export default function Dashboard() {
     const [currentWeek, setCurrentWeek] = useState(1);
     const [newWeight, setNewWeight] = useState('');
     const [loggingWeight, setLoggingWeight] = useState(false);
+    const [newBadgeLabel, setNewBadgeLabel] = useState<string | null>(null);
 
     useEffect(() => {
         if (!user) return;
         loadData();
     }, [user]);
+
+    const streak = computeStreak(sessions);
+    const badges = profile && plan ? computeBadges({ sessions, weightHistory, profile, plan, streak }) : [];
+    const unlockedBadgeIds = badges.filter((b) => b.unlocked).map((b) => b.id);
+    const unlockedKey = unlockedBadgeIds.join(',');
+
+    useEffect(() => {
+        if (badges.length === 0) return;
+        const stored: string[] = JSON.parse(localStorage.getItem('ym-unlocked-badges') || '[]');
+        const newlyUnlockedId = unlockedBadgeIds.find((id) => !stored.includes(id));
+
+        if (newlyUnlockedId) {
+            const badge = badges.find((b) => b.id === newlyUnlockedId);
+            setNewBadgeLabel(badge?.label ?? null);
+            localStorage.setItem('ym-unlocked-badges', JSON.stringify(unlockedBadgeIds));
+            const timer = setTimeout(() => setNewBadgeLabel(null), 4000);
+            return () => clearTimeout(timer);
+        }
+
+        if (unlockedBadgeIds.length !== stored.length) {
+            localStorage.setItem('ym-unlocked-badges', JSON.stringify(unlockedBadgeIds));
+        }
+    }, [unlockedKey]);
 
     async function loadData() {
         if (!user) return;
@@ -166,7 +193,14 @@ export default function Dashboard() {
 
                 {error && <p className="text-sm text-red-500">{error}</p>}
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {newBadgeLabel && (
+                    <div className="rounded-xl bg-[var(--color-accent)]/10 border border-[var(--color-accent)] px-4 py-3 flex items-center gap-2 text-sm font-medium">
+                        <Trophy className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
+                        Badge débloqué : <span className="text-[var(--color-accent)]">{newBadgeLabel}</span>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatTile
                         icon={<Scale className="w-4 h-4" />}
                         label="Poids actuel"
@@ -184,6 +218,12 @@ export default function Dashboard() {
                         label="Séances totales"
                         value={`${sessions.length}`}
                         hint="Depuis le début du programme"
+                    />
+                    <StatTile
+                        icon={<Flame className="w-4 h-4" />}
+                        label="Série en cours"
+                        value={`${streak.current} j`}
+                        hint={`Record : ${streak.longest} j`}
                     />
                 </div>
 
@@ -305,6 +345,16 @@ export default function Dashboard() {
                         </div>
                     )}
                 </Card>
+
+                <div>
+                    <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-[var(--color-accent)]" /> Tes badges
+                        <span className="text-sm font-normal text-[var(--color-muted)]">
+                            ({unlockedBadgeIds.length} / {badges.length})
+                        </span>
+                    </h2>
+                    <Achievements badges={badges} />
+                </div>
 
                 <div>
                     <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
