@@ -27,6 +27,7 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/demo" element={<Dashboard demo />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/auth/:pathname" element={<Auth />} />
                   <Route path="/account/:pathname" element={<Account />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { api } from "../lib/api";
 import type { SessionLog, TrainingPlan, UserProfile, WeightLog } from "../types";
@@ -9,6 +9,7 @@ import { Input } from "../components/ui/Input";
 import { StatTile } from "../components/ui/StatTile";
 import { WeightChart } from "../components/dashboard/WeightChart";
 import { Achievements } from "../components/dashboard/Achievements";
+import { demoPlan, demoProfile, demoSessions, demoWeightHistory } from "../lib/demoData";
 import { goalLabels } from "../lib/profileOptions";
 import { computeBadges, computeStreak } from "../lib/achievements";
 import {
@@ -28,7 +29,7 @@ import {
     TrendingUp,
 } from "lucide-react";
 
-export default function Dashboard() {
+export default function Dashboard({ demo = false }: { demo?: boolean }) {
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -47,9 +48,17 @@ export default function Dashboard() {
     const [newBadgeLabel, setNewBadgeLabel] = useState<string | null>(null);
 
     useEffect(() => {
+        if (demo) {
+            setProfile(demoProfile);
+            setPlan(demoPlan);
+            setWeightHistory(demoWeightHistory);
+            setSessions(demoSessions);
+            setLoading(false);
+            return;
+        }
         if (!user) return;
         loadData();
-    }, [user]);
+    }, [user, demo]);
 
     const streak = computeStreak(sessions);
     const badges = profile && plan ? computeBadges({ sessions, weightHistory, profile, plan, streak }) : [];
@@ -57,7 +66,7 @@ export default function Dashboard() {
     const unlockedKey = unlockedBadgeIds.join(',');
 
     useEffect(() => {
-        if (badges.length === 0) return;
+        if (badges.length === 0 || demo) return;
         const stored: string[] = JSON.parse(localStorage.getItem('ym-unlocked-badges') || '[]');
         const newlyUnlockedId = unlockedBadgeIds.find((id) => !stored.includes(id));
 
@@ -102,7 +111,7 @@ export default function Dashboard() {
     }
 
     async function handleGeneratePlan() {
-        if (!user) return;
+        if (!user || demo) return;
         setGenerating(true);
         setError('');
         try {
@@ -116,7 +125,13 @@ export default function Dashboard() {
     }
 
     async function handleLogWeight() {
-        if (!user || !newWeight) return;
+        if (!newWeight) return;
+        if (demo) {
+            setWeightHistory((prev) => [...prev, { id: `demo-${Date.now()}`, userId: 'demo', weight: Number(newWeight), loggedAt: new Date().toISOString() }]);
+            setNewWeight('');
+            return;
+        }
+        if (!user) return;
         setLoggingWeight(true);
         try {
             const log = await api.logWeight(user.id, Number(newWeight));
@@ -130,9 +145,12 @@ export default function Dashboard() {
     }
 
     async function handleToggleSession(day: string) {
+        if (isSessionDone(day)) return;
+        if (demo) {
+            setSessions((prev) => [...prev, { id: `demo-${Date.now()}`, userId: 'demo', week: currentWeek, day, completedAt: new Date().toISOString() }]);
+            return;
+        }
         if (!user) return;
-        const alreadyDone = isSessionDone(day);
-        if (alreadyDone) return;
 
         try {
             const log = await api.completeSession(user.id, currentWeek, day);
@@ -182,6 +200,13 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen pt-24 pb-16 px-6">
             <div className="max-w-5xl mx-auto space-y-8">
+                {demo && (
+                    <div className="rounded-xl glass px-4 py-3 flex items-center justify-between gap-3 flex-wrap text-sm">
+                        <span><strong>Mode démo</strong> : explore l'app avec des données d'exemple. Rien n'est enregistré.</span>
+                        <Link to="/auth/sign-up"><Button size="sm">Créer mon programme</Button></Link>
+                    </div>
+                )}
+
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold mb-1">
                         Ton tableau de bord

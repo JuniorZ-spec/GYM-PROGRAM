@@ -8,6 +8,7 @@ import {
     ArrowRight,
     ClipboardList,
     Dumbbell,
+    Eye,
     Flame,
     LineChart,
     Loader2,
@@ -70,14 +71,16 @@ export default function Home() {
 
     return (
         <div>
-            <section className="pt-32 pb-20 px-6 text-center">
-                <div className="max-w-3xl mx-auto">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] text-sm text-[var(--color-muted)] mb-6">
+            <section className="relative overflow-hidden pt-36 pb-24 px-6 text-center">
+                <div className="bg-grid absolute inset-0 pointer-events-none" aria-hidden />
+                <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[var(--color-accent)] opacity-15 blur-[120px] pointer-events-none animate-float" aria-hidden />
+                <div className="relative max-w-3xl mx-auto animate-fade-up">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-sm text-[var(--color-muted)] mb-6">
                         <Flame className="w-4 h-4 text-[var(--color-accent)]" />
                         Ton programme, généré par IA, en 2 minutes
                     </div>
-                    <h1 className="text-4xl sm:text-6xl font-bold leading-tight mb-6">
-                        Atteins tes objectifs avec <span className="text-[var(--color-accent)]">YM</span>
+                    <h1 className="text-4xl sm:text-7xl font-extrabold tracking-tight leading-[1.05] mb-6">
+                        Atteins tes objectifs avec <span className="text-gradient">YM</span>
                     </h1>
                     <p className="text-lg text-[var(--color-muted)] max-w-xl mx-auto mb-10">
                         YM crée ton programme d'entraînement personnalisé selon ton objectif, ton poids et ton niveau,
@@ -89,8 +92,13 @@ export default function Home() {
                                 Commencer <ArrowRight className="w-5 h-5" />
                             </Button>
                         </Link>
+                        <Link to="/demo">
+                            <Button size="lg" variant="secondary" className="gap-2">
+                                <Eye className="w-5 h-5" /> Voir la démo
+                            </Button>
+                        </Link>
                         <Link to="/auth/sign-in">
-                            <Button size="lg" variant="secondary">
+                            <Button size="lg" variant="ghost">
                                 Se connecter
                             </Button>
                         </Link>
@@ -101,8 +109,8 @@ export default function Home() {
             <section className="px-6 pb-20">
                 <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {features.map((feature) => (
-                        <Card key={feature.title} variant="bordered">
-                            <div className="text-[var(--color-accent)] mb-3">{feature.icon}</div>
+                        <Card key={feature.title} variant="bordered" className="hover:-translate-y-1 transition-all duration-300">
+                            <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)] text-[var(--color-accent)] flex items-center justify-center mb-4">{feature.icon}</div>
                             <h3 className="font-semibold mb-1">{feature.title}</h3>
                             <p className="text-sm text-[var(--color-muted)]">{feature.description}</p>
                         </Card>
@@ -112,11 +120,11 @@ export default function Home() {
 
             <section className="px-6 pb-24">
                 <div className="max-w-5xl mx-auto">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">Comment ça marche</h2>
+                    <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-center mb-12">Comment ça marche</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                         {steps.map((step, index) => (
                             <div key={step.title} className="text-center">
-                                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--color-accent)] text-[var(--color-accent-foreground)] flex items-center justify-center font-bold text-lg">
+                                <div className="w-12 h-12 mx-auto mb-4 rounded-full glow-accent bg-[var(--color-accent)] text-[var(--color-accent-foreground)] flex items-center justify-center font-bold text-lg">
                                     {index + 1}
                                 </div>
                                 <h3 className="font-semibold mb-2">{step.title}</h3>
@@ -128,7 +136,7 @@ export default function Home() {
             </section>
 
             <section className="px-6 pb-24">
-                <Card variant="bordered" className="max-w-3xl mx-auto text-center py-10">
+                <Card variant="bordered" className="max-w-3xl mx-auto text-center py-12 glass">
                     <Dumbbell className="w-10 h-10 text-[var(--color-accent)] mx-auto mb-4" />
                     <h2 className="text-2xl font-bold mb-2">Prêt à passer à l'action ?</h2>
                     <p className="text-[var(--color-muted)] mb-6">Ton programme personnalisé t'attend, il ne manque que toi.</p>
